@@ -112,7 +112,11 @@ namespace PPLUP.PluginAnalyzer
                     f.Declaration
                         .DescendantNodes()
                         .OfType<IdentifierNameSyntax>()
-                        .Any(t => t.Identifier.Text == "IOrganizationService")
+                        .Any(
+                            t =>
+                                t.Identifier.Text == "IOrganizationService"
+                                || t.Identifier.Text == "IPluginExecutionContext"
+                        )
                 select f;
             foreach (var f in fieldNodes)
             {

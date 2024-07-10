@@ -26,6 +26,8 @@ namespace MyPlugin
     {
         public void Execute(IServiceProvider serviceProvider)
         {
+            IPluginExecutionContext _context;
+            IOrganizationService _organizationService;
         }
     }
 }";
@@ -51,7 +53,7 @@ namespace MyPlugin
         }
 
         [TestMethod]
-        public async Task AnalyzerShouldFail()
+        public async Task AnalyzerShouldFailIOrganizationService()
         {
             var test =
                 @"
@@ -77,7 +79,33 @@ namespace MyPlugin
         }
 
         [TestMethod]
-        public async Task AnalyzerWithPluginBaseShouldFail()
+        public async Task AnalyzerShouldFailIPluginExecutionContext()
+        {
+            var test =
+                @"
+using System;
+using Microsoft.Xrm.Sdk;
+
+namespace MyPlugin
+{
+    class {|#0:TypeName|} : IPlugin
+    {
+        private IPluginExecutionContext _context;
+        public void Execute(IServiceProvider serviceProvider)
+        {
+        }
+    }
+}";
+
+            var expected = VerifyCS
+                .Diagnostic("PPLUPStatelessPlugins")
+                .WithLocation(9, 9)
+                .WithArguments("TypeName");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task AnalyzerWithPluginBaseShouldFailIOrganizationService()
         {
             var test =
                 @"
@@ -89,6 +117,36 @@ namespace MyPlugin
     class {|#0:TypeName|} : PluginBase
     {
         private IOrganizationService _organizationService;
+    }
+
+    public abstract class PluginBase : IPlugin
+    {
+        public void Execute(IServiceProvider serviceProvider)
+        {
+        }
+    }
+}";
+
+            var expected = VerifyCS
+                .Diagnostic("PPLUPStatelessPlugins")
+                .WithLocation(9, 9)
+                .WithArguments("TypeName");
+            await VerifyCS.VerifyAnalyzerAsync(test, expected);
+        }
+
+        [TestMethod]
+        public async Task AnalyzerWithPluginBaseShouldFailIPluginExecutionContext()
+        {
+            var test =
+                @"
+using System;
+using Microsoft.Xrm.Sdk;
+
+namespace MyPlugin
+{
+    class {|#0:TypeName|} : PluginBase
+    {
+        private IPluginExecutionContext _context;
     }
 
     public abstract class PluginBase : IPlugin
@@ -118,12 +176,15 @@ namespace MyPlugin
 {
     class {|#0:TypeName|} : PluginBase
     {
+        
     }
 
     public abstract class PluginBase : IPlugin
     {
         public void Execute(IServiceProvider serviceProvider)
         {
+            IPluginExecutionContext _context;
+            IOrganizationService _organizationService;
         }
     }
 }";
